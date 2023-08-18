@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Time Counter</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.15/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        @keyframes slide {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Dark theme */
+        body.dark-mode {
+            background-color: #1a202c;
+            color: #cbd5e0;
+        }
+
+        /* Text color for dark theme */
+        body.dark-mode #counter,
+        body.dark-mode h1 {
+            color: #000;
+        }
+
+        /* Position the button in the bottom right corner */
+        #toggleThemeBtn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+    <div class="bg-white p-8 rounded shadow-lg w-full sm:w-96 mx-auto">
+        <h1 class="text-3xl font-semibold mb-4 text-center">Time Counter</h1>
+        <div class="text-5xl font-bold mb-6 text-center" id="counter">00:00:00</div>
+        <div class="flex justify-center space-x-4">
+            <button class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-full w-28" id="startBtn">Start</button>
+            <button class="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-full w-28" id="stopBtn">Stop</button>
+            <button class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-full w-28" id="resetBtn">Reset</button>
+            <button class="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-full w-28" id="lapBtn">Lap</button>
+        </div>
+        <div class="mt-4" id="lapTimes"></div>
+    </div>
+
+    <audio id="notificationSound" src="notification.mp3"></audio>
+    
+    <button class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-full" id="toggleThemeBtn">Toggle Theme</button>
+    
+    <script>
+        let interval;
+        let seconds = 0;
+        let minutes = 0;
+        let hours = 0;
+        let lapTimes = [];
+
+        function updateCounter() {
+            seconds++;
+            if (seconds === 60) {
+                seconds = 0;
+                minutes++;
+                if (minutes === 60) {
+                    minutes = 0;
+                    hours++;
+                }
+            }
+
+            const formattedTime = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            const counterElement = document.getElementById('counter');
+            counterElement.style.animation = 'none'; // Remove animation class
+            counterElement.offsetHeight; // Trigger reflow to reset animation
+            counterElement.style.animation = 'slide 0.5s ease-out'; // Reapply animation class
+            counterElement.textContent = formattedTime;
+
+            // Play a sound when the timer reaches 10 seconds
+            if (seconds === 10) {
+                const notificationSound = document.getElementById('notificationSound');
+                notificationSound.play();
+            }
+        }
+
+        document.getElementById('startBtn').addEventListener('click', () => {
+            interval = setInterval(updateCounter, 1000);
+        });
+
+        document.getElementById('stopBtn').addEventListener('click', () => {
+            clearInterval(interval);
+        });
+
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            clearInterval(interval);
+            seconds = 0;
+            minutes = 0;
+            hours = 0;
+            lapTimes = [];
+            updateCounter();
+            document.getElementById('lapTimes').innerHTML = '';
+        });
+
+        document.getElementById('lapBtn').addEventListener('click', () => {
+            lapTimes.push(`${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`);
+            const lapTimesElement = document.getElementById('lapTimes');
+            lapTimesElement.innerHTML = '';
+            lapTimes.forEach((lapTime, index) => {
+                const lapItem = document.createElement('div');
+                lapItem.textContent = `Lap ${index + 1}: ${lapTime}`;
+                lapTimesElement.appendChild(lapItem);
+            });
+        });
+
+        document.getElementById('toggleThemeBtn').addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+        });
+    </script>
+</body>
+</html>
